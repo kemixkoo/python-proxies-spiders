@@ -63,27 +63,47 @@ class XiCiProxiesSipder:
                     h_speed = h_line_chilren[6]
                     h_speed_bar = h_speed.find('div', class_='bar')
                     if h_speed_bar and h_speed_bar['title']:
-                        line['speed'] = h_speed_bar['title']
+                        line['speed'] = h_speed_bar['title'][:-1]
 
                     # time
                     h_time = h_line_chilren[7]
                     h_time_bar = h_time.find('div', class_='bar')
                     if h_time_bar and h_time_bar['title']:
-                        line['time'] = h_time_bar['title']
+                        line['time'] = h_time_bar['title'][:-1]
 
                     line['days'] = h_line_chilren[8].string
                     line['update'] = h_line_chilren[9].string
 
         return self.list
 
-    def save(self):
-        with open('proxies', 'w') as f:
-            f.write(self.list)
+    def save_proxies(self):
+        with open('proxies.json', 'w') as f:
+            proxies = {}
+
+            http_list = []
+            https_list = []
+            for one in self.list:
+                if float(one['speed']) < 1:
+                    type = one['type'].lower()
+                    line = str(one['ip'] + ':' + str(one['port']))
+                    if 'http' == type:
+                        http_list.append(line)
+                    if 'https' == type:
+                        https_list.append(line)
+
+            if len(http_list) > 0:
+                proxies['http'] = http_list
+            if len(https_list) > 0:
+                proxies['https'] = https_list
+
+            f.write(str(proxies))
+            f.flush()
 
 
 if __name__ == '__main__':
     spider = XiCiProxiesSipder(region='国内HTTPS')
     data = spider.get_proxies()
+    spider.save_proxies()
 
     print len(data)
 
